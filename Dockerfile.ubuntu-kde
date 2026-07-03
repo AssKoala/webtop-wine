@@ -1,0 +1,29 @@
+FROM lscr.io/linuxserver/webtop:ubuntu-kde
+
+# install wine
+RUN \
+        echo "**** Installing Pre-reqs ****" && \
+        apt update && \
+        apt install -y wget gpg ca-certificates && \
+        install -d -m 0755 /etc/apt/keyrings && \
+        wget -qO- https://dl.winehq.org/wine-builds/winehq.key | sudo gpg --dearmor --yes -o /etc/apt/keyrings/winehq-archive.gpg && \
+        . /etc/os-release && \
+        source_url="https://dl.winehq.org/wine-builds/ubuntu/dists/${VERSION_CODENAME}/winehq-${VERSION_CODENAME}.sources" && \
+        tmp_sources="$(mktemp)" && \
+        wget -O "$tmp_sources" "$source_url" && sed 's#/etc/apt/keyrings/winehq-archive.key#/etc/apt/keyrings/winehq-archive.gpg#' "$tmp_sources" | sudo tee /etc/apt/sources.list.d/winehq.sources > /dev/null && \
+        rm -f "$tmp_sources" && \
+        echo "**** Installing WINE ****" && \
+        apt update && \
+        apt install -y --install-recommends winehq-stable && \
+        apt install -y winetricks
+
+# cleanup
+RUN \
+        echo "**** Cleaning up ****" && \
+        apt remove -y wget gpg ca-certificates && \
+        apt autoclean && \
+        rm -rf \
+            /config/.cache \
+            /var/lib/apt/lists/* \
+            /var/tmp/* \
+            /tmp/*
